@@ -2,14 +2,10 @@ import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { Construct } from "constructs";
+import { BaseCloudTracingStack } from "./base_cloud_tracing_stack";
 
-export class SqsRelatedStack extends cdk.NestedStack {
-  public stateMachine: sfn.StateMachine;
-
-  constructor(scope: Construct, props?: cdk.NestedStackProps) {
-    super(scope, "SqsRelatedStack", props);
-
+export class SqsRelatedStack extends BaseCloudTracingStack {
+  initializeStepFunction(): void {
     // Create an SQS queue
     const queue = new sqs.Queue(this, "MyQueue", {
       queueName: "step-function-target-queue",
@@ -34,22 +30,23 @@ export class SqsRelatedStack extends cdk.NestedStack {
       backoffRate: 2, // X the wait time for each retry
       errors: ["States.TaskFailed"],
     });
-
     // Create the state machine
-    this.stateMachine = new sfn.StateMachine(this, "StateMachine", {
+    this.stepFunction = new sfn.StateMachine(this, "StateMachine", {
       definition: sendToSqsTask,
       stateMachineName: "SQSMessageSender",
       timeout: cdk.Duration.minutes(5),
       tracingEnabled: true, // Enable X-Ray tracing
       comment: "State machine that sends messages to SQS",
+      logs: {
+        destination: this.logGroup,
+        level: sfn.LogLevel.ALL,
+        includeExecutionData: true,
+      },
     });
-
-    // Grant the state machine permission to send messages to the queue
-    queue.grantSendMessages(this.stateMachine);
 
     // Output the ARNs for reference
     new cdk.CfnOutput(this, "StateMachineArn", {
-      value: this.stateMachine.stateMachineArn,
+      value: this.stepFunction.stateMachineArn,
       description: "State Machine ARN",
     });
 

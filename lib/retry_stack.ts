@@ -1,21 +1,11 @@
-import {
-  NestedStack,
-  NestedStackProps,
-  Duration,
-  RemovalPolicy,
-  Tags,
-} from "aws-cdk-lib";
-import { Construct } from "constructs";
+import { Duration } from "aws-cdk-lib";
 import { LambdaNodejs } from "./constructs/lambda-nodejs";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
+import { BaseCloudTracingStack } from "./base_cloud_tracing_stack";
 
-export class RetryNestedStack extends NestedStack {
-  public logGroup: LogGroup;
-
-  constructor(scope: Construct, props: NestedStackProps) {
-    super(scope, "retryExample", props);
+export class RetryNestedStack extends BaseCloudTracingStack {
+  initializeStepFunction() {
     const retryLambda1 = new LambdaNodejs(this, "retryLambda1", {
       ddhandler: "retry.handler",
       service: "joey-test-step-1",
@@ -60,15 +50,10 @@ export class RetryNestedStack extends NestedStack {
         // "Lambda.SdkClientException",
       ],
     });
-    // Define the Log Group for L2T
-    this.logGroup = new LogGroup(this, "RetryStateMachineLogGroup", {
-      removalPolicy: RemovalPolicy.DESTROY,
-      retention: RetentionDays.ONE_DAY,
-      logGroupName: "/aws/vendedlogs/states/RetryStateMachineLogGroup",
-    });
+
     // Define the Step Function
 
-    const stepFunction = new sfn.StateMachine(this, "StateMachine", {
+    this.stepFunction = new sfn.StateMachine(this, "StateMachine", {
       definitionBody: sfn.DefinitionBody.fromChainable(
         lambdaTask1.next(lambdaTask2)
       ),
@@ -79,10 +64,5 @@ export class RetryNestedStack extends NestedStack {
         includeExecutionData: true,
       },
     });
-
-    Tags.of(stepFunction).add("service", "joey-test-step-functions");
-    Tags.of(stepFunction).add("env", "joey");
-    Tags.of(stepFunction).add("DD_TRACE_ENABLED", "true");
-    Tags.of(stepFunction).add("version", "1");
   }
 }
