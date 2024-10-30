@@ -3,6 +3,7 @@ import {
   NestedStackProps,
   RemovalPolicy,
   Tags,
+  Duration,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
@@ -25,9 +26,32 @@ export abstract class BaseCloudTracingStack extends NestedStack {
       retention: RetentionDays.ONE_DAY,
       logGroupName: "/aws/vendedlogs/states/" + id + "LogGroup",
     });
+
+    this.stepFunction = new sfn.StateMachine(this, id + "StateMachine", {
+      definition: sfn.Chain.start(new sfn.Pass(this, "StartState")), // dummy state to be replaced
+      timeout: Duration.minutes(10),
+      logs: {
+        // also part of enabling cloud tracing
+        destination: this.logGroup,
+        level: sfn.LogLevel.ALL,
+        includeExecutionData: true,
+      },
+    });
     this.initializeStepFunction();
-    // Define the Step Function
     this.enableCloudTracing(id);
+  }
+
+  setDefinitionFromJsonObj(definition: object) {
+    const cfnStateMachine = this.stepFunction.node
+      .defaultChild as sfn.CfnStateMachine;
+    cfnStateMachine.definitionString = JSON.stringify(definition);
+  }
+
+  setDefinitionFromChainable(definition: sfn.IChainable) {
+    // Actually this doesn't work now....
+    const cfnStateMachine = this.stepFunction.node
+      .defaultChild as sfn.CfnStateMachine;
+    cfnStateMachine.definition = definition;
   }
 
   enableCloudTracing(id: string) {

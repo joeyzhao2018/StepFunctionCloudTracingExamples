@@ -30,19 +30,7 @@ export class SqsRelatedStack extends BaseCloudTracingStack {
       backoffRate: 2, // X the wait time for each retry
       errors: ["States.TaskFailed"],
     });
-    // Create the state machine
-    this.stepFunction = new sfn.StateMachine(this, "StateMachine", {
-      definition: sendToSqsTask,
-      stateMachineName: "SQSMessageSender",
-      timeout: cdk.Duration.minutes(5),
-      tracingEnabled: true, // Enable X-Ray tracing
-      comment: "State machine that sends messages to SQS",
-      logs: {
-        destination: this.logGroup,
-        level: sfn.LogLevel.ALL,
-        includeExecutionData: true,
-      },
-    });
+    this.setDefinitionFromChainable(sendToSqsTask);
 
     // Output the ARNs for reference
     new cdk.CfnOutput(this, "StateMachineArn", {

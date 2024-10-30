@@ -1,5 +1,5 @@
 import { Duration } from "aws-cdk-lib";
-import { LambdaNodejs } from "./constructs/lambda-nodejs";
+import { LambdaNodejs } from "../constructs/lambda-nodejs";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import * as tasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { BaseCloudTracingStack } from "./base_cloud_tracing_stack";
@@ -52,17 +52,8 @@ export class RetryNestedStack extends BaseCloudTracingStack {
     });
 
     // Define the Step Function
-
-    this.stepFunction = new sfn.StateMachine(this, "StateMachine", {
-      definitionBody: sfn.DefinitionBody.fromChainable(
-        lambdaTask1.next(lambdaTask2)
-      ),
-      timeout: Duration.minutes(10),
-      logs: {
-        destination: this.logGroup,
-        level: sfn.LogLevel.ALL,
-        includeExecutionData: true,
-      },
-    });
+    this.setDefinitionFromChainable(
+      sfn.Chain.start(lambdaTask1).next(lambdaTask2)
+    );
   }
 }

@@ -40,7 +40,7 @@ export class LambdaNodejs extends lambda.Function {
       lambda.LayerVersion.fromLayerVersionArn(
         this,
         "extension",
-        "arn:aws:lambda:us-west-2:464622532012:layer:Datadog-Extension:64"
+        "arn:aws:lambda:us-west-2:464622532012:layer:Datadog-Extension:65"
       ),
       lambda.LayerVersion.fromLayerVersionArn(
         this,

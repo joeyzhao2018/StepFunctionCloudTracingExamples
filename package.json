@@ -21,6 +21,7 @@
     "typescript": "~5.4.5"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda-python-alpha": "^2.123.0-alpha.0",
     "aws-cdk-lib": "2.143.0",
     "constructs": "^10.0.0",
     "datadog-cdk-constructs-v2": "^1.15.0",
