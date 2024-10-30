@@ -3,7 +3,7 @@ import boto3
 
 import os
 lambda_client = boto3.client('lambda')
-target_function_name = os.environ["TARGET_FUNCTION"]
+target_function_name = os.environ.get("TARGET_FUNCTION", "dummy")
 
 
 def invoke(event, context):
@@ -12,7 +12,7 @@ def invoke(event, context):
     response = lambda_client.invoke(
         FunctionName=target_function_name,
         InvocationType='RequestResponse',
-        Payload=json.dumps(event)
+        Payload=json.dumps({"from": "invoker"})
     )
 
     # Parse response from second Lambda
@@ -24,6 +24,7 @@ def invoke(event, context):
     }
 
 def dummy(event, context):
+    print("Got context", context)
     return {
         'statusCode': 200,
         'body': 'Hello from target'
