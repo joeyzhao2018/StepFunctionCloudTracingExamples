@@ -6,6 +6,7 @@ import { SqsRelatedStack } from "./nestedStacks/sqs_related_stack";
 
 import { DistributedMapStateStack } from "./nestedStacks/distributed_mapstate_stack";
 import { StepLambdaLambdaStack } from "./nestedStacks/step_lambda_lambda_stack";
+import { ErrorStack } from "./nestedStacks/error_stack";
 export class JoeyTestStepFunctionsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -18,13 +19,15 @@ export class JoeyTestStepFunctionsStack extends cdk.Stack {
       "distMapStateStack",
       {}
     );
-    const stepLambdaLambdaStack = new StepLambdaLambdaStack(
-      this,
-      "stepLambdaLambdaStack",
-      {}
-    );
+
+    // const errorStack = new ErrorStack(this, "errorStack", {});
+    // const stepLambdaLambdaStack = new StepLambdaLambdaStack(
+    //   this,
+    //   "stepLambdaLambdaStack",
+    //   {}
+    // );
 
     cdk.Tags.of(distributedMapStateStack).add("DD_PRESERVE_STACK", "true");
-    cdk.Tags.of(stepLambdaLambdaStack).add("DD_PRESERVE_STACK", "true");
+    // cdk.Tags.of(errorStack).add("DD_PRESERVE_STACK", "true");
   }
 }

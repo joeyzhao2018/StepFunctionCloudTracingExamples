@@ -60,9 +60,9 @@ export abstract class BaseCloudTracingStack extends NestedStack {
     Tags.of(this.stepFunction).add("DD_TRACE_ENABLED", "true");
     Tags.of(this.stepFunction).add("version", "1");
 
-    const forwarderARN = `arn:aws:lambda:us-west-2:${MY_ACCOUNT}:function:joey-datadog-forwarder-Forwarder-Eexdd3oFeRfR`; // To Prod
+    const forwarderARN = `arn:aws:lambda:ca-central-1:${MY_ACCOUNT}:function:DatadogForwarder-ddserverless`; // To Prod
     addForwarderToLogGroups(this, [this.logGroup], forwarderARN, true);
-    const forwarderARNStaging = `arn:aws:lambda:us-west-2:${MY_ACCOUNT}:function:joey-staging-datadog-forwarder-Forwarder-sYy45ZxYr6dN`; // To staging
+    const forwarderARNStaging = `arn:aws:lambda:ca-central-1:${MY_ACCOUNT}:function:DatadogForwarder-Staging`; // To staging
     addForwarderToLogGroups(this, [this.logGroup], forwarderARNStaging, true);
   }
 }

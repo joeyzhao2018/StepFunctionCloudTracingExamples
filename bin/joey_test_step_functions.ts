@@ -4,7 +4,11 @@ import * as cdk from 'aws-cdk-lib';
 import { JoeyTestStepFunctionsStack } from '../lib/joey_test_step_functions-stack';
 
 const app = new cdk.App();
-new JoeyTestStepFunctionsStack(app, 'JoeyTestStepFunctionsStack', {
+new JoeyTestStepFunctionsStack(app, "JoeyTestStepFunctionsStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT || "425362996713", // Replace with your account ID
+    region: process.env.CDK_DEFAULT_REGION || "ca-central-1", // Replace with your region
+  },
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

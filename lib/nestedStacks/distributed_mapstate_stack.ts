@@ -25,26 +25,6 @@ export class DistributedMapStateStack extends BaseCloudTracingStack {
     dataBucket.grantRead(processorFunction);
     dataBucket.grantWrite(processorFunction);
 
-    // Create the Lambda task for processing individual items
-    const processItem = new tasks.LambdaInvoke(this, "ProcessItem", {
-      lambdaFunction: processorFunction,
-      resultPath: "$.processingResult",
-      payload: sfn.TaskInput.fromObject({
-        "Payload.$": "States.JsonMerge($$, $, false)",
-      }),
-    });
-
-    // Create the Map state definition
-    const mapStateDefinition = new sfn.Map(this, "MapState", {
-      maxConcurrency: 100,
-      itemsPath: sfn.JsonPath.stringAt("$"),
-      itemSelector: {
-        "item.$": "$$.Map.Item.Value",
-      },
-    });
-
-    // Add the Lambda task to the map state
-    mapStateDefinition.itemProcessor(processItem);
 
     // Create the distributed map state definition
     const distributedMapDefinition = {
@@ -59,6 +39,7 @@ export class DistributedMapStateStack extends BaseCloudTracingStack {
               ExecutionType: "STANDARD",
             },
             StartAt: "ProcessItem",
+            // QueryLanguage: "JSONata",
             States: {
               ProcessItem: {
                 Type: "Task",
@@ -67,11 +48,61 @@ export class DistributedMapStateStack extends BaseCloudTracingStack {
                   FunctionName: processorFunction.functionArn,
                   "Payload.$": "States.JsonMerge($$, $, false)",
                 },
+                // Arguments: {
+                //   FunctionName: processorFunction.functionArn,
+                //   Payload:
+                //     "{% ($execInput := $states.context.Execution.Input; $ddContext := $exists($execInput._datadog) ? $execInput._datadog : {'x-datadog-execution-arn': $states.context.Execution.Id}; $merge([{'_datadog': $ddContext}, $execInput, $states.context])) %}",
+                // },
                 ResultPath: "$.processingResult",
+                // End: true,
+                Next: "SecondMap",
+              },
+              SecondMap: {
+                Type: "Map",
+                MaxConcurrency: 100,
+                ItemProcessor: {
+                  ProcessorConfig: {
+                    Mode: "DISTRIBUTED",
+                    ExecutionType: "STANDARD",
+                  },
+                  StartAt: "ProcessSecondItem",
+                  States: {
+                    ProcessSecondItem: {
+                      Type: "Task",
+                      Resource: "arn:aws:states:::lambda:invoke",
+                      Parameters: {
+                        FunctionName: processorFunction.functionArn,
+                        "Payload.$": "States.JsonMerge($$, $, false)",
+                      },
+                      ResultPath: "$.processingResult",
+                      End: true,
+                    },
+                  },
+                },
+                ItemReader: {
+                  ReaderConfig: {
+                    InputType: "JSON",
+                    MaxItems: 100,
+                  },
+                  Resource: "arn:aws:states:::s3:getObject",
+                  Parameters: {
+                    Bucket: dataBucket.bucketName,
+                    Key: "input2.json",
+                    // "Key.$": "States.Format('output/{}/manifest.json', $$.Execution.Id)",
+                  },
+                },
+                ResultWriter: {
+                  Resource: "arn:aws:states:::s3:putObject",
+                  Parameters: {
+                    Bucket: dataBucket.bucketName,
+                    Prefix: "final-output/",
+                  },
+                },
                 End: true,
               },
             },
           },
+
           ItemReader: {
             ReaderConfig: {
               InputType: "JSON",

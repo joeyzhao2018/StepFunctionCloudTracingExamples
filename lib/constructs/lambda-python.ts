@@ -51,12 +51,12 @@ export class LambdaPython extends PythonFunction {
       lambda.LayerVersion.fromLayerVersionArn(
         this,
         "extension",
-        "arn:aws:lambda:us-west-2:464622532012:layer:Datadog-Extension:65"
+        "arn:aws:lambda:ca-central-1:464622532012:layer:Datadog-Extension:65"
       ),
       lambda.LayerVersion.fromLayerVersionArn(
         this,
         "layer",
-        "arn:aws:lambda:us-west-2:464622532012:layer:Datadog-Python39:99"
+        "arn:aws:lambda:ca-central-1:464622532012:layer:Datadog-Python39:99"
       ),
     ];
     this.addLayers(...layers);
