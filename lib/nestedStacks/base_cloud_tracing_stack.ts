@@ -11,7 +11,7 @@ import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import * as sfn from "aws-cdk-lib/aws-stepfunctions";
 import { addForwarderToLogGroups } from "datadog-cdk-constructs-v2";
 
-const MY_ACCOUNT = "";
+const MY_ACCOUNT = process.env.MY_ACCOUNT;
 
 export abstract class BaseCloudTracingStack extends NestedStack {
   public logGroup: LogGroup;
